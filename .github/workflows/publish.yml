@@ -1,8 +1,9 @@
 name: Publish
 
 on:
-  release:
-    types: [ published ]
+  push:
+    branches:
+      - test
 
 jobs:
   build:
@@ -10,7 +11,7 @@ jobs:
     steps:
       - name: "Set release version"
         id: release
-        run: echo "::set-output name=version::${GITHUB_REF:10}"
+        run: echo "::set-output name=version::2.24.1"
       - uses: actions/checkout@v4.0.0
 
       - name: "Set up JDK"
@@ -28,17 +29,17 @@ jobs:
       - name: "Gradle Build"
         run: ./gradlew build buildRpm buildDeb -Pversion=${{ steps.release.outputs.version }}
 
-      - name: "Gradle Publish"
-        run: |
-          ./gradlew publishToSonatype -Pversion=${{ steps.release.outputs.version }} \
-                    -Psigning.keyId=${GPG_KEY_ID} \
-                    -Psigning.password=${GPG_PASSPHRASE} \
-                    -Psigning.secretKeyRingFile=${GITHUB_WORKSPACE}/${GPG_KEY_ID}.gpg
-        env:
-          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.OSSRH_USERNAME }}
-          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.OSSRH_PASSWORD }}
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      # - name: "Gradle Publish"
+      #   run: |
+      #     ./gradlew publishToSonatype -Pversion=${{ steps.release.outputs.version }} \
+      #               -Psigning.keyId=${GPG_KEY_ID} \
+      #               -Psigning.password=${GPG_PASSPHRASE} \
+      #               -Psigning.secretKeyRingFile=${GITHUB_WORKSPACE}/${GPG_KEY_ID}.gpg
+      #   env:
+      #     ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.OSSRH_USERNAME }}
+      #     ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.OSSRH_PASSWORD }}
+      #     GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+      #     GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: "Publish Deb to GitHub"
         uses: actions/upload-release-asset@v1.0.2
